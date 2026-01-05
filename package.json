@@ -15,9 +15,9 @@
       "import": "./src/d1.ts",
       "types": "./src/d1.ts"
     },
-    "./env": {
-      "import": "./src/env.ts",
-      "types": "./src/env.ts"
+    "./workers": {
+      "import": "./src/workers.ts",
+      "types": "./src/workers.ts"
     }
   },
   "files": [

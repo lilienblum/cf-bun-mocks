@@ -147,12 +147,20 @@ export class D1Mock implements D1Database {
 
   async exec(query: string): Promise<D1ExecResult> {
     const start = performance.now();
-    const { changes: count } = this.#db.run(query);
-    const duration = performance.now() - start;
-    return {
-      count,
-      duration,
-    };
+    try {
+      const { changes: count } = this.#db.run(query);
+      const duration = performance.now() - start;
+      return {
+        count,
+        duration,
+      };
+    } catch (error) {
+      throw new Error(
+        `D1Mock exec failed: ${
+          error instanceof Error ? error.message : String(error)
+        }\nQuery: ${query}`
+      );
+    }
   }
 
   withSession(
@@ -173,7 +181,7 @@ export class D1Mock implements D1Database {
   }
 }
 
-export async function initD1(migrationsPath: string): Promise<D1Mock> {
+export async function createD1Mock(migrationsPath: string): Promise<D1Mock> {
   const files = readdirSync(migrationsPath)
     .filter((file) => file.endsWith(".sql"))
     .sort();
