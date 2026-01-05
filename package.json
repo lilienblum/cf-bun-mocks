@@ -1,6 +1,6 @@
 {
   "name": "cf-bun-mocks",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Cloudflare Workers mocks and helpers for Bun testing",
   "type": "module",
   "main": "src/index.ts",
