@@ -180,7 +180,15 @@ export async function initD1(migrationsPath: string): Promise<D1Mock> {
   const db = new D1Mock(":memory:");
   for (const file of files) {
     const migration = await Bun.file(path.join(migrationsPath, file)).text();
-    await db.exec(migration);
+    try {
+      await db.exec(migration);
+    } catch (error) {
+      throw new Error(
+        `Failed to execute migration ${file}: ${
+          error instanceof Error ? error.message : String(error)
+        }`
+      );
+    }
   }
   return db;
 }

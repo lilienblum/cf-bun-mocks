@@ -8,10 +8,10 @@ export function useEnv<TEnv extends Cloudflare.Env = Cloudflare.Env>(
 ) {
   beforeEach(async () => {
     const env = await setup();
-    mock.module(MODULE_NAME, () => env);
+    mock.module(MODULE_NAME, () => ({ env }));
   });
 
   afterEach(() => {
-    mock.module(MODULE_NAME, () => {});
+    mock.module(MODULE_NAME, () => ({ env: {} }));
   });
 }
