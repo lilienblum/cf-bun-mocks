@@ -30,4 +30,6 @@ export function useWorkersEnv<TEnv extends Cloudflare.Env = Cloudflare.Env>(
   afterAll(() => {
     moduleMock.env = {};
   });
+
+  return moduleMock.env;
 }

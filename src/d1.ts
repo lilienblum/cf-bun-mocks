@@ -110,7 +110,7 @@ class D1DatabaseSessionMock implements D1DatabaseSession {
 }
 
 export class D1Mock implements D1Database {
-  #db: Database;
+  db: Database;
 
   constructor(
     filename?: string,
@@ -124,11 +124,11 @@ export class D1Mock implements D1Database {
           strict?: boolean;
         }
   ) {
-    this.#db = new Database(filename, options);
+    this.db = new Database(filename, options);
   }
 
   prepare(query: string): D1PreparedStatement {
-    const stmt = this.#db.prepare(query);
+    const stmt = this.db.prepare(query);
     return new D1PreparedStatementMock(stmt);
   }
 
@@ -148,7 +148,7 @@ export class D1Mock implements D1Database {
   async exec(query: string): Promise<D1ExecResult> {
     const start = performance.now();
     try {
-      const { changes: count } = this.#db.run(query);
+      const { changes: count } = this.db.run(query);
       const duration = performance.now() - start;
       return {
         count,
@@ -170,7 +170,7 @@ export class D1Mock implements D1Database {
   }
 
   async dump(): Promise<ArrayBuffer> {
-    const serialized = this.#db.serialize();
+    const serialized = this.db.serialize();
     const buffer = serialized.buffer;
     if (buffer instanceof SharedArrayBuffer) {
       const newBuffer = new ArrayBuffer(buffer.byteLength);
