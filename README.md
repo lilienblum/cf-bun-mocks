@@ -109,68 +109,21 @@ const response = await worker.fetch(request, env);
 
 ## Workers Environment
 
-For testing Cloudflare Workers, use the `useWorkersEnv` helper to create test environments:
+For testing code that imports from `cloudflare:workers`, use `useWorkersMock()` to mock the module and set up test environments:
 
 ```typescript
 import { describe, test, expect } from "bun:test";
-import { useWorkersEnv, D1Mock } from "cf-bun-mocks";
-import type { Env } from "./worker";
-
-describe("my worker", () => {
-  const { env } = useWorkersEnv<Env>(() => ({
-    DB: new D1Mock(":memory:"),
-    MY_SECRET: "test-secret",
-  }));
-
-  test("uses test environment", async () => {
-    // Pass the env to your worker handler
-    const response = await worker.fetch(request, env);
-    expect(response.status).toBe(200);
-  });
-});
-```
-
-### Module Mocking (Advanced)
-
-For mocking `cloudflare:workers` module imports, use `setupWorkersMock` in a preload script and combine it with `useWorkersEnv`:
-
-Create a `test-setup.ts` file:
-
-```typescript
-// test-setup.ts
-import { setupWorkersMock } from "cf-bun-mocks";
-
-// Set up module mocks before any test files load
-await setupWorkersMock();
-```
-
-Then run tests with preload:
-
-```bash
-bun test --preload ./test-setup.ts
-```
-
-Or configure it in `bunfig.toml`:
-
-```toml
-[test]
-preload = ["./test-setup.ts"]
-```
-
-Then use in your tests:
-
-```typescript
-import { describe, test, expect } from "bun:test";
-import { useWorkersEnv, D1Mock } from "cf-bun-mocks";
+import { useWorkersMock, D1Mock } from "cf-bun-mocks";
 
 describe("worker with module imports", () => {
-  useWorkersEnv(() => ({
-    DB: new D1Mock(":memory:"),
-    API_KEY: "test-key",
+  const { env } = useWorkersMock(() => ({
+    env: {
+      DB: new D1Mock(":memory:"),
+      API_KEY: "test-key",
+    },
   }));
 
-  test("uses mocked module", async () => {
-    // The env object reference stays the same, only properties change
+  test("uses mocked environment", async () => {
     const { env } = await import("cloudflare:workers");
     expect(env.DB).toBeDefined();
     expect(env.API_KEY).toBe("test-key");
@@ -178,7 +131,29 @@ describe("worker with module imports", () => {
 });
 ```
 
-> **Note**: `setupWorkersMock` uses Bun's `mock.module()` function. Module mocks must be set up before any imports happen. See [Bun's test lifecycle docs](https://bun.com/docs/test/lifecycle#global-setup-and-teardown) for preload details and [Bun's mocking docs](https://bun.sh/docs/test/mocking) for more on module mocking.
+The mock environment is reset before each test with the values from your factory function.
+
+### Manual Injection (Alternative)
+
+If you're not using `cloudflare:workers` imports, you can pass the environment directly to your worker:
+
+```typescript
+import { describe, test, expect } from "bun:test";
+import { D1Mock } from "cf-bun-mocks";
+import type { Env } from "./worker";
+
+describe("my worker", () => {
+  test("uses test environment", async () => {
+    const env: Env = {
+      DB: new D1Mock(":memory:"),
+      MY_SECRET: "test-secret",
+    };
+
+    const response = await worker.fetch(request, env);
+    expect(response.status).toBe(200);
+  });
+});
+```
 
 ## API
 
@@ -196,13 +171,9 @@ Implements the full `D1Database` interface from `@cloudflare/workers-types`:
 
 Creates an in-memory D1Mock and runs all `.sql` migration files from the specified directory in sorted order.
 
-### `useWorkersEnv<TEnv>(createEnv: () => Partial<TEnv> | Promise<Partial<TEnv>>)`
+### `useWorkersMock<TEnv>(createMock: () => Partial<{ env: TEnv }> | Promise<Partial<{ env: TEnv }>>)`
 
-Updates the global workers mock environment for each test. Must be used with `setupWorkersMock()`.
-
-### `setupWorkersMock<TEnv>(createMock?: () => WorkersModuleMock<TEnv> | Promise<WorkersModuleMock<TEnv>>)`
-
-Sets up the `cloudflare:workers` module mock using Bun's `mock.module()`. **Must be called in a preload script before any test files load.** Use Bun's `--preload` flag or configure it in `bunfig.toml`. Call once at the start of your test suite, then use `useWorkersEnv()` to update the environment per test.
+Mocks the `cloudflare:workers` module and sets up test environments. Returns a mock object with an `env` property that gets updated before each test with values from the factory function. Uses Bun's `mock.module()` internally.
 
 ## Requirements
 

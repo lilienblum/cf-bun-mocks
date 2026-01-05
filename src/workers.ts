@@ -1,35 +1,28 @@
 /// <reference types="@cloudflare/workers-types" />
-import { beforeEach, mock, afterAll } from "bun:test";
+import { beforeEach, mock, afterAll, beforeAll } from "bun:test";
 
-type WorkersModuleMock<TEnv extends Cloudflare.Env = Cloudflare.Env> = {
-  env: Partial<TEnv>;
-};
+type WorkersModuleMock<TEnv extends Partial<Cloudflare.Env> = Cloudflare.Env> =
+  {
+    env: TEnv;
+  };
 
-let moduleMock: WorkersModuleMock = { env: {} };
+export function useWorkersMock<
+  TEnv extends Partial<Cloudflare.Env> = Cloudflare.Env
+>(createMock: () => Bun.MaybePromise<Partial<WorkersModuleMock<TEnv>>>) {
+  const moduleMock: WorkersModuleMock<TEnv> = { env: {} as TEnv };
 
-export async function setupWorkersMock<
-  TEnv extends Cloudflare.Env = Cloudflare.Env
->(createMock?: () => Bun.MaybePromise<WorkersModuleMock<TEnv>>) {
-  if (createMock) {
-    moduleMock = await createMock();
-  }
-  mock.module("cloudflare:workers", () => moduleMock);
-}
+  beforeAll(() => {
+    mock.module("cloudflare:workers", () => moduleMock);
+  });
 
-export function useWorkersEnv<TEnv extends Cloudflare.Env = Cloudflare.Env>(
-  createEnv: () => Bun.MaybePromise<Partial<TEnv>>
-) {
   beforeEach(async () => {
-    const env = await createEnv();
-    for (const key in moduleMock.env) {
-      delete (moduleMock.env as any)[key];
-    }
-    Object.assign(moduleMock.env, env);
+    const mock = await createMock();
+    Object.assign(moduleMock.env, mock.env);
   });
 
   afterAll(() => {
-    moduleMock.env = {};
+    mock.restore();
   });
 
-  return moduleMock.env;
+  return moduleMock;
 }
