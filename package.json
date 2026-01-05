@@ -1,0 +1,42 @@
+{
+  "name": "cf-bun-mocks",
+  "version": "0.1.0-alpha.0",
+  "description": "Cloudflare Workers mocks and helpers for Bun testing",
+  "type": "module",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts",
+      "types": "./src/index.ts"
+    },
+    "./d1": {
+      "import": "./src/d1.ts",
+      "types": "./src/d1.ts"
+    },
+    "./env": {
+      "import": "./src/env.ts",
+      "types": "./src/env.ts"
+    }
+  },
+  "files": [
+    "src"
+  ],
+  "keywords": [
+    "cloudflare",
+    "workers",
+    "d1",
+    "mock",
+    "bun",
+    "testing"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260103.0",
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
